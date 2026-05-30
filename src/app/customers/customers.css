@@ -1,0 +1,167 @@
+.customers-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.actions-bar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 12px;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.data-table th, .data-table td {
+  padding: 16px;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.data-table th {
+  background: rgba(255, 255, 255, 0.05);
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.data-table tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.font-medium {
+  font-weight: 500;
+  color: #fff;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.py-8 {
+  padding-top: 32px !important;
+  padding-bottom: 32px !important;
+}
+
+.text-muted {
+  color: var(--text-muted);
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(15, 23, 42, 0.75); /* Darker overlay for better contrast */
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  z-index: 9999;
+  backdrop-filter: blur(4px); /* Blur the background behind modal */
+  padding: 50px 20px;
+  overflow-y: auto;
+}
+
+.modal-content {
+  width: 100%;
+  max-width: 900px;
+  /* Bỏ qua backdrop-filter để tránh lỗi cắt background trên Chrome khi có animation */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background-color: #1e293b !important; /* Solid Slate-800 color */
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+  padding: 32px;
+  border-radius: 16px;
+  margin: 0 auto 50px auto;
+}
+
+.modal-content h2 {
+  font-size: 20px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--card-border);
+  padding-bottom: 12px;
+}
+
+.mt-4 { margin-top: 16px; }
+.mt-6 { margin-top: 24px; }
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.btn-secondary {
+  padding: 12px 20px;
+  background: transparent;
+  color: var(--text-main);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* Tab Filter styles */
+.tabs-container {
+  display: flex;
+  gap: 6px;
+  background: rgba(15, 23, 42, 0.4);
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
+}
+
+.tab-button {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tab-button:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.tab-button.active {
+  color: #fff;
+  background: linear-gradient(135deg, rgba(var(--primary-color-rgb), 0.2), rgba(16, 185, 129, 0.2));
+  border: 1px solid rgba(var(--primary-color-rgb), 0.4);
+  box-shadow: 0 4px 12px rgba(var(--primary-color-rgb), 0.15);
+  font-weight: 600;
+}
+
+.tab-count {
+  font-size: 11px;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-muted);
+  padding: 2px 6px;
+  border-radius: 9999px;
+  font-weight: normal;
+  transition: all 0.3s ease;
+}
+
+.tab-button.active .tab-count {
+  background: rgba(var(--primary-color-rgb), 0.3);
+  color: #fff;
+}
+

@@ -1,0 +1,306 @@
+/* CSS for Dynamic Menu Config Page */
+
+.menu-config-container {
+  display: flex;
+  gap: 24px;
+  min-height: calc(100vh - 120px);
+  animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.menu-sidebar-panel {
+  width: 320px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  height: fit-content;
+}
+
+.menu-tree-panel {
+  flex: 1;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--card-border);
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+}
+
+.panel-header h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #60a5fa;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Tree Nodes List */
+.menu-nodes-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 0;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.menu-node-row-container {
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.menu-node-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: rgba(30, 41, 59, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  cursor: grab;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.menu-node-row:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.menu-node-row:active {
+  cursor: grabbing;
+}
+
+/* Drag State Styling */
+.menu-node-row.dragging {
+  opacity: 0.4;
+  border: 1px dashed var(--primary-color);
+  background: rgba(var(--primary-color-rgb), 0.05);
+}
+
+/* Drop targets visual feedback */
+.menu-node-row-container.drag-over-before .menu-node-row {
+  border-top: 2px solid var(--primary-color);
+  box-shadow: 0 -4px 12px rgba(var(--primary-color-rgb), 0.2);
+}
+
+.menu-node-row-container.drag-over-inside .menu-node-row {
+  background: rgba(var(--primary-color-rgb), 0.15);
+  border-color: var(--primary-color);
+  box-shadow: 0 0 12px rgba(var(--primary-color-rgb), 0.3);
+}
+
+.menu-node-row-container.drag-over-after .menu-node-row {
+  border-bottom: 2px solid var(--primary-color);
+  box-shadow: 0 4px 12px rgba(var(--primary-color-rgb), 0.2);
+}
+
+/* Node Contents */
+.node-left-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.node-drag-handle {
+  color: var(--text-muted);
+  font-size: 14px;
+  cursor: grab;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.node-drag-handle:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-main);
+}
+
+.node-collapse-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 10px;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.node-collapse-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-main);
+}
+
+.node-icon {
+  font-size: 16px;
+  width: 20px;
+  text-align: center;
+}
+
+.node-title {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.node-path-badge {
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(96, 165, 250, 0.1);
+  color: #93c5fd;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.node-type-badge {
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.badge-root {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+}
+
+.badge-folder {
+  background: rgba(167, 139, 250, 0.15);
+  color: #c084fc;
+}
+
+.badge-link {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}
+
+/* Actions and buttons */
+.node-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.node-action-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.node-action-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-main);
+}
+
+.node-action-btn.btn-delete:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+.node-action-btn.btn-add-sub:hover {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}
+
+/* Tree level indent and guides */
+.tree-indent-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* Quick Actions Form styling */
+.quick-action-card {
+  background: rgba(15, 23, 42, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.quick-action-card h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-main);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 8px;
+  margin-bottom: 4px;
+}
+
+/* Form Styles */
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-field label {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.form-row {
+  display: flex;
+  gap: 8px;
+}
+
+/* Dropdown selector */
+.select-glass {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--card-border);
+  border-radius: 8px;
+  color: var(--text-main);
+  padding: 10px 12px;
+  font-size: 0.9rem;
+  outline: none;
+  width: 100%;
+}
+
+.select-glass option {
+  background: #1e293b;
+  color: var(--text-main);
+}
+
+.select-glass:focus {
+  border-color: var(--primary-color);
+}
+
+/* Empty State */
+.empty-tree-state {
+  text-align: center;
+  padding: 40px;
+  color: var(--text-muted);
+  border: 2px dashed rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+}

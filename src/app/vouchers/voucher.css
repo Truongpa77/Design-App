@@ -1,0 +1,159 @@
+/* ===========================
+   VOUCHER FORM - PHIEU NHAP KHO
+   =========================== */
+
+.voucher-form {
+  padding: 28px 32px;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.voucher-form-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--card-border);
+}
+
+.voucher-title {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  background: linear-gradient(135deg, #60a5fa, #a78bfa);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Meta / Header info */
+.voucher-meta {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 20px 24px;
+}
+
+.voucher-meta-row {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
+.voucher-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.voucher-field-group label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.voucher-input {
+  width: 100%;
+}
+
+/* Detail table */
+.voucher-detail-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.voucher-detail-table thead tr {
+  background: rgba(var(--primary-color-rgb), 0.1);
+}
+
+.voucher-detail-table th {
+  padding: 10px 12px;
+  font-weight: 700;
+  color: #60a5fa;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  white-space: nowrap;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.voucher-detail-table td {
+  padding: 4px 6px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  vertical-align: middle;
+}
+
+.voucher-detail-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.voucher-empty-row td {
+  opacity: 0.35;
+}
+
+.voucher-select {
+  width: 100%;
+  padding: 6px 10px !important;
+  font-size: 13px !important;
+  min-height: unset !important;
+}
+
+.voucher-input-num {
+  width: 100%;
+  padding: 6px 10px !important;
+  font-size: 13px !important;
+  text-align: right !important;
+  min-height: unset !important;
+}
+
+/* Summary footer */
+.voucher-summary {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  border-top: 1px solid var(--card-border);
+  padding-top: 16px;
+}
+
+.voucher-summary-row {
+  display: flex;
+  gap: 48px;
+  justify-content: flex-end;
+  font-size: 14px;
+  min-width: 300px;
+}
+
+.voucher-summary-row span:first-child {
+  color: var(--text-muted);
+  font-weight: 500;
+  flex: 1;
+  text-align: right;
+}
+
+.voucher-summary-row span:last-child {
+  font-weight: 600;
+  width: 140px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.voucher-summary-total {
+  font-size: 16px;
+  padding-top: 8px;
+  border-top: 2px solid var(--card-border);
+  margin-top: 4px;
+}
+
+.voucher-summary-total span:first-child {
+  color: var(--text-main);
+  font-weight: 700;
+}
