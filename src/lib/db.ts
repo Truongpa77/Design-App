@@ -1,12 +1,24 @@
 import { Pool } from 'pg';
 
-const pool = new Pool({
-  host: process.env.DB_HOST,
-  port: parseInt(process.env.DB_PORT || '5432', 10),
-  database: process.env.DB_NAME,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-});
+const isLocal = !process.env.DB_HOST || process.env.DB_HOST === 'localhost' || process.env.DB_HOST === '127.0.0.1';
+const connectionString = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+
+const config = connectionString 
+  ? { 
+      connectionString, 
+      ssl: isLocal ? false : { rejectUnauthorized: false } 
+    }
+  : {
+      host: process.env.DB_HOST || process.env.POSTGRES_HOST,
+      port: parseInt(process.env.DB_PORT || process.env.POSTGRES_PORT || '5432', 10),
+      database: process.env.DB_NAME || process.env.POSTGRES_DATABASE,
+      user: process.env.DB_USER || process.env.POSTGRES_USER,
+      password: process.env.DB_PASSWORD || process.env.POSTGRES_PASSWORD,
+      ssl: isLocal ? false : { rejectUnauthorized: false }
+    };
+
+const pool = new Pool(config);
+
 
 // Tự động chạy di cư CSDL (migration) khi khởi tạo pool kết nối
 async function runAutoMigration() {
