@@ -47,7 +47,7 @@ export default function BomCalcClient({ initialQuotations }: { initialQuotations
   const [qInfo, setQInfo] = useState<Quotation | null>(null);
   const [summary, setSummary] = useState<SummaryItem[]>([]);
   const [breakdown, setBreakdown] = useState<BreakdownItem[]>([]);
-  
+
   const [editedQuantities, setEditedQuantities] = useState<{ [key: number]: string }>({});
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -74,8 +74,8 @@ export default function BomCalcClient({ initialQuotations }: { initialQuotations
         // Khởi tạo các giá trị input chỉnh sửa
         const initialEdited: { [key: number]: string } = {};
         data.summary.forEach((item: SummaryItem) => {
-          initialEdited[item.material_id] = item.custom_quantity !== null 
-            ? item.custom_quantity.toString() 
+          initialEdited[item.material_id] = item.custom_quantity !== null
+            ? item.custom_quantity.toString()
             : item.total_required.toFixed(4).replace(/\.?0+$/, "");
         });
         setEditedQuantities(initialEdited);
@@ -211,9 +211,9 @@ export default function BomCalcClient({ initialQuotations }: { initialQuotations
             <label style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>
               Chọn báo giá sản phẩm *
             </label>
-            <select 
-              className="input-glass" 
-              value={selectedQId} 
+            <select
+              className="input-glass"
+              value={selectedQId}
               onChange={handleQChange}
               style={{ fontSize: '14px', padding: '10px' }}
             >
@@ -227,19 +227,19 @@ export default function BomCalcClient({ initialQuotations }: { initialQuotations
           </div>
           {qInfo && (
             <div style={{ display: 'flex', gap: '12px' }}>
-              <button 
-                type="button" 
-                className="btn-primary" 
-                onClick={handleSave} 
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={handleSave}
                 disabled={saving || loading}
                 style={{ width: 'auto', padding: '10px 24px', background: 'var(--success)' }}
               >
                 {saving ? '⏳ Đang lưu...' : '💾 Lưu nhu cầu điều chỉnh'}
               </button>
-              <button 
-                type="button" 
-                className="btn-secondary" 
-                onClick={handleExportExcel} 
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={handleExportExcel}
                 disabled={loading}
                 style={{ width: 'auto', padding: '10px 24px' }}
               >
@@ -262,15 +262,15 @@ export default function BomCalcClient({ initialQuotations }: { initialQuotations
 
           {/* Tabs */}
           <div className="tabs-container" style={{ marginBottom: '20px', display: 'flex', gap: '8px' }}>
-            <button 
-              type="button" 
+            <button
+              type="button"
               className={`tab-button ${activeTab === 'summary' ? 'active' : ''}`}
               onClick={() => setActiveTab('summary')}
             >
               📊 Bảng tổng hợp nhu cầu đặt mua / điều chỉnh
             </button>
-            <button 
-              type="button" 
+            <button
+              type="button"
               className={`tab-button ${activeTab === 'breakdown' ? 'active' : ''}`}
               onClick={() => setActiveTab('breakdown')}
             >
@@ -279,7 +279,7 @@ export default function BomCalcClient({ initialQuotations }: { initialQuotations
           </div>
 
           {loading ? (
-            <div style={{ padding: '48px', textAlignment: 'center', color: 'var(--text-muted)' }}>
+            <div style={{ padding: '48px', textAlign: 'center', color: 'var(--text-muted)' }}>
               ⏳ Đang tính toán dữ liệu định mức vật tư...
             </div>
           ) : activeTab === 'summary' ? (
@@ -321,10 +321,10 @@ export default function BomCalcClient({ initialQuotations }: { initialQuotations
                             <input
                               type="number"
                               className="input-glass"
-                              style={{ 
-                                padding: '6px 10px', 
-                                fontSize: '13px', 
-                                fontWeight: 'bold', 
+                              style={{
+                                padding: '6px 10px',
+                                fontSize: '13px',
+                                fontWeight: 'bold',
                                 color: 'var(--primary-color)',
                                 border: '1px solid rgba(59, 130, 246, 0.4)'
                               }}

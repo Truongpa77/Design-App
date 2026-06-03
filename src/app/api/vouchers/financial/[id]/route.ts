@@ -105,8 +105,7 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
         total_amount = $7, 
         total_tax = $8, 
         grand_total = $9,
-        transaction_code = $10,
-        updated_at = NOW()
+        transaction_code = $10
        WHERE id = $11 RETURNING *`,
       [
         document_no, 
