@@ -75,6 +75,12 @@ export async function initializeSchema(pool: Pool) {
           total_price NUMERIC NOT NULL,
           status VARCHAR(50) DEFAULT 'draft',
           quotation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          document_no VARCHAR(100),
+          project_name VARCHAR(255),
+          description TEXT,
+          partner_address TEXT,
+          project_id INTEGER REFERENCES projects(id) ON DELETE SET NULL,
+          project_item_id INTEGER REFERENCES projects(id) ON DELETE SET NULL,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
 
@@ -87,7 +93,11 @@ export async function initializeSchema(pool: Pool) {
           total_price NUMERIC NOT NULL,
           length NUMERIC,
           width NUMERIC,
-          height NUMERIC
+          height NUMERIC,
+          category VARCHAR(100),
+          tax_percent NUMERIC DEFAULT 0,
+          image_path TEXT,
+          project_item_id INTEGER REFERENCES projects(id) ON DELETE SET NULL
       );
 
       CREATE TABLE IF NOT EXISTS product_bom (
@@ -341,9 +351,19 @@ export async function initializeSchema(pool: Pool) {
       ALTER TABLE quotations ADD COLUMN IF NOT EXISTS project_id INTEGER REFERENCES projects(id) ON DELETE SET NULL;
       ALTER TABLE quotations ADD COLUMN IF NOT EXISTS project_item_id INTEGER REFERENCES projects(id) ON DELETE SET NULL;
       ALTER TABLE quotations ADD COLUMN IF NOT EXISTS quotation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+      ALTER TABLE quotations ADD COLUMN IF NOT EXISTS document_no VARCHAR(100);
+      ALTER TABLE quotations ADD COLUMN IF NOT EXISTS project_name VARCHAR(255);
+      ALTER TABLE quotations ADD COLUMN IF NOT EXISTS description TEXT;
+      ALTER TABLE quotations ADD COLUMN IF NOT EXISTS partner_address TEXT;
+
       ALTER TABLE quotation_items ADD COLUMN IF NOT EXISTS length NUMERIC;
       ALTER TABLE quotation_items ADD COLUMN IF NOT EXISTS width NUMERIC;
       ALTER TABLE quotation_items ADD COLUMN IF NOT EXISTS height NUMERIC;
+      ALTER TABLE quotation_items ADD COLUMN IF NOT EXISTS category VARCHAR(100);
+      ALTER TABLE quotation_items ADD COLUMN IF NOT EXISTS tax_percent NUMERIC DEFAULT 0;
+      ALTER TABLE quotation_items ADD COLUMN IF NOT EXISTS image_path TEXT;
+      ALTER TABLE quotation_items ADD COLUMN IF NOT EXISTS project_item_id INTEGER REFERENCES projects(id) ON DELETE SET NULL;
+
       ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'user';
       ALTER TABLE materials ADD COLUMN IF NOT EXISTS material_code VARCHAR(100);
       ALTER TABLE materials ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
