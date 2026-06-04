@@ -14,17 +14,56 @@ export async function GET() {
   try {
     log('🔄 Bắt đầu migration database (direct connection, không qua pooler)...');
 
-    // 1. Chẩn đoán trạng thái kết nối
-    const roCheck = await directPool.query(`
-      SELECT 
-        current_setting('transaction_read_only') as transaction_ro,
-        current_setting('default_transaction_read_only') as default_ro,
-        current_database() as current_db,
-        current_user as current_user,
-        inet_server_addr() as server_ip
-    `);
-    log(`📊 DB: ${roCheck.rows[0].current_db}, User: ${roCheck.rows[0].current_user}, IP: ${roCheck.rows[0].server_ip}`);
-    log(`📊 transaction_read_only: ${roCheck.rows[0].transaction_ro}, default: ${roCheck.rows[0].default_ro}`);
+    // 1. Chẩn đoán trạng thái kết nối + thử force read-write
+    const client = await directPool.connect();
+    try {
+      const roCheck = await client.query(`
+        SELECT 
+          current_setting('transaction_read_only') as transaction_ro,
+          current_setting('default_transaction_read_only') as default_ro,
+          current_database() as current_db,
+          current_user as current_user,
+          inet_server_addr() as server_ip,
+          version() as pg_version
+      `);
+      log(`📊 DB: ${roCheck.rows[0].current_db}, User: ${roCheck.rows[0].current_user}, IP: ${roCheck.rows[0].server_ip}`);
+      log(`📊 PG: ${roCheck.rows[0].pg_version}`);
+      log(`📊 BEFORE SET: transaction_read_only=${roCheck.rows[0].transaction_ro}, default=${roCheck.rows[0].default_ro}`);
+
+      // Thử force read-write
+      try {
+        await client.query('SET SESSION CHARACTERISTICS AS TRANSACTION READ WRITE');
+        log('✅ SET SESSION READ WRITE thành công');
+      } catch (e: any) {
+        log(`❌ SET SESSION READ WRITE thất bại: ${e.message}`);
+      }
+
+      try {
+        await client.query('SET default_transaction_read_only = off');
+        log('✅ SET default_transaction_read_only = off thành công');
+      } catch (e: any) {
+        log(`❌ SET default_transaction_read_only = off thất bại: ${e.message}`);
+      }
+
+      // Kiểm tra lại sau SET
+      const roCheck2 = await client.query(`
+        SELECT current_setting('transaction_read_only') as ro, 
+               current_setting('default_transaction_read_only') as default_ro
+      `);
+      log(`📊 AFTER SET: transaction_read_only=${roCheck2.rows[0].ro}, default=${roCheck2.rows[0].default_ro}`);
+
+      // Thử tạo 1 bảng test nhỏ để xác nhận write access
+      try {
+        await client.query('CREATE TABLE IF NOT EXISTS _migration_test (id int)');
+        await client.query('DROP TABLE IF EXISTS _migration_test');
+        log('✅ Test CREATE TABLE thành công — có write access!');
+      } catch (e: any) {
+        log(`❌ Test CREATE TABLE thất bại: ${e.message}`);
+        log('⚠️ Database THỰC SỰ read-only. Cần kiểm tra Neon dashboard.');
+      }
+    } finally {
+      client.release();
+    }
 
     // 2. Chạy initializeSchema (tạo bảng + seed dữ liệu)
     await initializeSchema(directPool);

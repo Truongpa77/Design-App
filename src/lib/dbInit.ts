@@ -12,6 +12,17 @@ export async function initializeSchema(pool: Pool) {
   try {
     console.log('🔄 Bắt đầu kiểm tra và tự động khởi tạo cấu trúc CSDL...');
 
+    // Force read-write mode — Neon có thể enforce read-only ở mức proxy
+    await client.query('SET SESSION CHARACTERISTICS AS TRANSACTION READ WRITE');
+    await client.query('SET default_transaction_read_only = off');
+    
+    // Kiểm tra lại trạng thái sau khi SET
+    const roCheck = await client.query(`
+      SELECT current_setting('transaction_read_only') as ro, 
+             current_setting('default_transaction_read_only') as default_ro
+    `);
+    console.log(`📊 After SET: transaction_read_only=${roCheck.rows[0].ro}, default=${roCheck.rows[0].default_ro}`);
+
     await client.query('BEGIN');
 
     // 1. Tạo các bảng cơ bản
