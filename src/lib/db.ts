@@ -31,6 +31,13 @@ const config = connectionString
 
 const pool = new Pool(config);
 
+// Tự động tắt chế độ read-only cho tất cả các kết nối mới trong pool
+pool.on('connect', (client) => {
+  client.query('SET default_transaction_read_only = off;').catch((err) => {
+    console.warn('⚠️ Không thể tắt default_transaction_read_only khi kết nối:', err.message || err);
+  });
+});
+
 
 // Tự động chạy di cư CSDL (migration) khi khởi tạo pool kết nối
 async function runAutoMigration() {

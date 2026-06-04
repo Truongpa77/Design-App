@@ -1,11 +1,20 @@
 import { Pool } from 'pg';
 
 export async function initializeSchema(pool: Pool) {
+  const client = await pool.connect();
   try {
     console.log('🔄 Bắt đầu kiểm tra và tự động khởi tạo cấu trúc CSDL...');
 
+    // Tắt chế độ read-only cho session hiện tại để có thể thực thi ALTER/CREATE TABLE
+    try {
+      await client.query('SET default_transaction_read_only = off;');
+      console.log('✅ Đã tắt chế độ default_transaction_read_only cho session này.');
+    } catch (e: any) {
+      console.warn('⚠️ Không thể tắt chế độ default_transaction_read_only:', e.message || e);
+    }
+
     // 1. Tạo các bảng cơ bản
-    await pool.query(`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS users (
           id SERIAL PRIMARY KEY,
           username VARCHAR(50) UNIQUE NOT NULL,
@@ -185,7 +194,7 @@ export async function initializeSchema(pool: Pool) {
     console.log('✅ Đã khởi tạo các bảng cơ bản thành công.');
 
     // 2. Tạo các bảng nâng cao & Indexes
-    await pool.query(`
+    await client.query(`
       CREATE TABLE IF NOT EXISTS account_initial_balances (
           id SERIAL PRIMARY KEY,
           account_code VARCHAR(50) REFERENCES accounts(account_code) ON DELETE CASCADE,
@@ -246,7 +255,7 @@ export async function initializeSchema(pool: Pool) {
     console.log('✅ Đã khởi tạo các bảng tài chính nâng cao thành công.');
 
     // 3. Thêm các cột & cấu trúc bổ sung (nếu database đã tồn tại từ trước)
-    await pool.query(`
+    await client.query(`
       ALTER TABLE quotations ADD COLUMN IF NOT EXISTS project_id INTEGER REFERENCES projects(id) ON DELETE SET NULL;
       ALTER TABLE quotations ADD COLUMN IF NOT EXISTS project_item_id INTEGER REFERENCES projects(id) ON DELETE SET NULL;
       ALTER TABLE quotations ADD COLUMN IF NOT EXISTS quotation_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
@@ -333,7 +342,7 @@ export async function initializeSchema(pool: Pool) {
     ];
 
     for (const lookup of seedLookups) {
-      await pool.query(`
+      await client.query(`
         INSERT INTO lookup_configs 
           (lookup_key, table_name, value_field, display_field, sublabel_field, search_fields, additional_filter, parent_field)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -425,7 +434,7 @@ export async function initializeSchema(pool: Pool) {
 
     // Chèn tài khoản cha
     for (const acc of seedAccounts.filter(a => !a.parent)) {
-      await pool.query(`
+      await client.query(`
         INSERT INTO accounts 
           (account_code, account_name, parent_code, track_foreign_currency, track_object_debt, track_project_cost, is_ledger, is_bank, is_long_term, debt_increase_side)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
@@ -444,7 +453,7 @@ export async function initializeSchema(pool: Pool) {
 
     // Chèn tài khoản con
     for (const acc of seedAccounts.filter(a => a.parent)) {
-      await pool.query(`
+      await client.query(`
         INSERT INTO accounts 
           (account_code, account_name, parent_code, track_foreign_currency, track_object_debt, track_project_cost, is_ledger, is_bank, is_long_term, debt_increase_side)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
@@ -463,7 +472,7 @@ export async function initializeSchema(pool: Pool) {
     console.log('✅ Đã seed dữ liệu Accounts.');
 
     // 6. Seed Giao dịch mẫu (Transactions)
-    await pool.query(`
+    await client.query(`
       INSERT INTO transactions (transaction_code, transaction_name, debit_account, credit_account, is_active)
       VALUES ('131', 'Bán hàng công nợ', '131', '511', TRUE)
       ON CONFLICT (transaction_code) DO NOTHING;
@@ -471,9 +480,9 @@ export async function initializeSchema(pool: Pool) {
     console.log('✅ Đã seed cấu hình Transactions.');
 
     // 7. Seed người dùng admin mặc định (admin / 123456)
-    const checkUser = await pool.query("SELECT * FROM users WHERE username = 'admin'");
+    const checkUser = await client.query("SELECT * FROM users WHERE username = 'admin'");
     if (checkUser.rowCount === 0) {
-      await pool.query("INSERT INTO users (username, password_hash, role) VALUES ('admin', '123456', 'admin')");
+      await client.query("INSERT INTO users (username, password_hash, role) VALUES ('admin', '123456', 'admin')");
       console.log('🌱 Đã tạo tài khoản admin mặc định: admin / 123456');
     }
 
@@ -481,5 +490,7 @@ export async function initializeSchema(pool: Pool) {
   } catch (error) {
     console.error('❌ Lỗi khi tự động khởi tạo cấu trúc CSDL:', error);
     throw error;
+  } finally {
+    client.release();
   }
 }
