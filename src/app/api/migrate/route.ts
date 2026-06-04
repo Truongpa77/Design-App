@@ -11,6 +11,8 @@ export async function GET() {
   // Tạo pool kết nối TRỰC TIẾP (không qua PgBouncer) cho DDL operations
   const directPool = createDirectPool();
 
+  let dbStatusInfo: any = null;
+
   try {
     log('🔄 Bắt đầu migration database (direct connection, không qua pooler)...');
 
@@ -26,9 +28,10 @@ export async function GET() {
           inet_server_addr() as server_ip,
           version() as pg_version
       `);
-      log(`📊 DB: ${roCheck.rows[0].current_db}, User: ${roCheck.rows[0].current_user}, IP: ${roCheck.rows[0].server_ip}`);
-      log(`📊 PG: ${roCheck.rows[0].pg_version}`);
-      log(`📊 BEFORE SET: transaction_read_only=${roCheck.rows[0].transaction_ro}, default=${roCheck.rows[0].default_ro}`);
+      dbStatusInfo = roCheck.rows[0];
+      log(`📊 DB: ${dbStatusInfo.current_db}, User: ${dbStatusInfo.current_user}, IP: ${dbStatusInfo.server_ip}`);
+      log(`📊 PG: ${dbStatusInfo.pg_version}`);
+      log(`📊 BEFORE SET: transaction_read_only=${dbStatusInfo.transaction_ro}, default=${dbStatusInfo.default_ro}`);
 
       // Thử force read-write
       try {
@@ -87,7 +90,7 @@ export async function GET() {
       message: 'Database migrated successfully!',
       tables: tableNames,
       logs,
-      db_status: roCheck.rows[0]
+      db_status: dbStatusInfo
     });
   } catch (err: any) {
     console.error('❌ Migration failed:', err);
