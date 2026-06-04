@@ -248,10 +248,8 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const layout = searchParams.get('layout') || 'admin';
 
-    // Seed default menus for non-admin layouts if they are empty
-    if (layout !== 'admin') {
-      await seedLayoutDefaultMenu(layout);
-    }
+    // Seed default menus for the layout if it is empty
+    await seedLayoutDefaultMenu(layout);
 
     // Filter strictly by the requested layout ID
     const result = await pool.query(
