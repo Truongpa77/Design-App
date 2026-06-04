@@ -1,17 +1,18 @@
 import { Pool } from 'pg';
 
+let _schemaInitialized = false;
+
 export async function initializeSchema(pool: Pool) {
+  if (_schemaInitialized) {
+    console.log('⏩ Schema đã khởi tạo rồi, bỏ qua.');
+    return;
+  }
+
   const client = await pool.connect();
   try {
     console.log('🔄 Bắt đầu kiểm tra và tự động khởi tạo cấu trúc CSDL...');
 
-    // Tắt chế độ read-only cho session hiện tại để có thể thực thi ALTER/CREATE TABLE
-    try {
-      await client.query('SET default_transaction_read_only = off;');
-      console.log('✅ Đã tắt chế độ default_transaction_read_only cho session này.');
-    } catch (e: any) {
-      console.warn('⚠️ Không thể tắt chế độ default_transaction_read_only:', e.message || e);
-    }
+    await client.query('BEGIN');
 
     // 1. Tạo các bảng cơ bản
     await client.query(`
@@ -254,7 +255,77 @@ export async function initializeSchema(pool: Pool) {
     `);
     console.log('✅ Đã khởi tạo các bảng tài chính nâng cao thành công.');
 
-    // 3. Thêm các cột & cấu trúc bổ sung (nếu database đã tồn tại từ trước)
+    // 3. Tạo bảng layouts, features, layout_details (trước đây thiếu)
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS layouts (
+        id VARCHAR(50) PRIMARY KEY,
+        name VARCHAR(100) NOT NULL,
+        icon VARCHAR(20) DEFAULT '📋',
+        is_system BOOLEAN DEFAULT false
+      );
+    `);
+
+    // Seed default layouts if empty
+    const checkLayouts = await client.query('SELECT COUNT(*) FROM layouts');
+    if (parseInt(checkLayouts.rows[0].count, 10) === 0) {
+      await client.query(`
+        INSERT INTO layouts (id, name, icon, is_system) VALUES
+        ('admin', 'Admin', '🔑', true),
+        ('office', 'Office', '🏢', true),
+        ('design', 'Design', '🎨', true)
+      `);
+    }
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS features (
+        id SERIAL PRIMARY KEY,
+        title VARCHAR(100) NOT NULL,
+        icon VARCHAR(20) DEFAULT '📋',
+        path VARCHAR(200) UNIQUE NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // Rename legacy menu_nodes table if exists
+    await client.query(`ALTER TABLE IF EXISTS menu_nodes RENAME TO layout_details;`);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS layout_details (
+        id SERIAL PRIMARY KEY,
+        layout_id VARCHAR(50) REFERENCES layouts(id) ON DELETE CASCADE DEFAULT 'admin',
+        parent_id INTEGER REFERENCES layout_details(id) ON DELETE CASCADE,
+        sort_order INTEGER,
+        title VARCHAR(100) NOT NULL,
+        icon VARCHAR(20) DEFAULT '📁',
+        path VARCHAR(200),
+        is_active BOOLEAN DEFAULT true,
+        show_in_menu BOOLEAN DEFAULT true,
+        show_in_submenu BOOLEAN DEFAULT true
+      );
+    `);
+
+    // Ensure columns exist for layout_details (migration from legacy)
+    await client.query(`
+      ALTER TABLE layout_details ADD COLUMN IF NOT EXISTS layout_id VARCHAR(50) REFERENCES layouts(id) ON DELETE CASCADE DEFAULT 'admin';
+      ALTER TABLE layout_details ADD COLUMN IF NOT EXISTS show_in_menu BOOLEAN DEFAULT true;
+      ALTER TABLE layout_details ADD COLUMN IF NOT EXISTS show_in_submenu BOOLEAN DEFAULT true;
+    `);
+
+    // Migrate NULL layout_id to 'admin'
+    await client.query(`UPDATE layout_details SET layout_id = 'admin' WHERE layout_id IS NULL;`);
+
+    // Create unique index for layout_details
+    await client.query(`
+      DROP INDEX IF EXISTS idx_menu_nodes_path;
+      DROP INDEX IF EXISTS idx_menu_nodes_layout_path;
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_layout_details_layout_path 
+      ON layout_details (layout_id, path) 
+      WHERE (path IS NOT NULL);
+    `);
+
+    console.log('✅ Đã khởi tạo bảng layouts, features, layout_details thành công.');
+
+    // 4. Thêm các cột & cấu trúc bổ sung (nếu database đã tồn tại từ trước)
     await client.query(`
       ALTER TABLE quotations ADD COLUMN IF NOT EXISTS project_id INTEGER REFERENCES projects(id) ON DELETE SET NULL;
       ALTER TABLE quotations ADD COLUMN IF NOT EXISTS project_item_id INTEGER REFERENCES projects(id) ON DELETE SET NULL;
@@ -267,7 +338,7 @@ export async function initializeSchema(pool: Pool) {
       ALTER TABLE materials ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
     `);
 
-    // 4. Seed dữ liệu Lookup Configs
+    // 5. Seed dữ liệu Lookup Configs
     const seedLookups = [
       {
         lookup_key: 'customer',
@@ -367,7 +438,7 @@ export async function initializeSchema(pool: Pool) {
     }
     console.log('✅ Đã seed cấu hình Lookup Configs.');
 
-    // 5. Seed tài khoản kế toán
+    // 6. Seed tài khoản kế toán
     const seedAccounts = [
       { code: '111', name: 'Tiền mặt', parent: null, foreign: false, debt: false, cost: false, ledger: false, bank: false, long_term: false, side: 'debit' },
       { code: '1111', name: 'Tiền Việt Nam', parent: '111', foreign: false, debt: false, cost: false, ledger: true, bank: false, long_term: false, side: 'debit' },
@@ -471,7 +542,7 @@ export async function initializeSchema(pool: Pool) {
     }
     console.log('✅ Đã seed dữ liệu Accounts.');
 
-    // 6. Seed Giao dịch mẫu (Transactions)
+    // 7. Seed Giao dịch mẫu (Transactions)
     await client.query(`
       INSERT INTO transactions (transaction_code, transaction_name, debit_account, credit_account, is_active)
       VALUES ('131', 'Bán hàng công nợ', '131', '511', TRUE)
@@ -479,15 +550,19 @@ export async function initializeSchema(pool: Pool) {
     `);
     console.log('✅ Đã seed cấu hình Transactions.');
 
-    // 7. Seed người dùng admin mặc định (admin / 123456)
+    // 8. Seed người dùng admin mặc định (admin / 123456)
     const checkUser = await client.query("SELECT * FROM users WHERE username = 'admin'");
     if (checkUser.rowCount === 0) {
       await client.query("INSERT INTO users (username, password_hash, role) VALUES ('admin', '123456', 'admin')");
       console.log('🌱 Đã tạo tài khoản admin mặc định: admin / 123456');
     }
 
+    await client.query('COMMIT');
+
+    _schemaInitialized = true;
     console.log('🎉 Hoàn thành tự động khởi tạo cấu trúc CSDL!');
   } catch (error) {
+    await client.query('ROLLBACK').catch(() => {});
     console.error('❌ Lỗi khi tự động khởi tạo cấu trúc CSDL:', error);
     throw error;
   } finally {
