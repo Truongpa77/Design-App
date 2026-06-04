@@ -6,6 +6,7 @@ import { verifyPassword } from '@/lib/auth';
 export async function POST(request: Request) {
   try {
     const { username, password } = await request.json();
+    console.log('Login request received for:', username);
 
     if (!username || !password) {
       return NextResponse.json({ error: 'Vui lòng nhập tên đăng nhập và mật khẩu' }, { status: 400 });
@@ -37,8 +38,27 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({ success: true, user });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Login error:', error);
+    
+    // Diagnostic query inside catch block
+    try {
+      const dbRes = await pool.query('SELECT current_database(), current_user;');
+      const tablesRes = await pool.query(`
+        SELECT table_name 
+        FROM information_schema.tables 
+        WHERE table_schema = 'public'
+        ORDER BY table_name;
+      `);
+      console.error('DIAGNOSTICS - Connected database:', dbRes.rows[0].current_database);
+      console.error('DIAGNOSTICS - Connected user:', dbRes.rows[0].current_user);
+      console.error('DIAGNOSTICS - Available tables:', tablesRes.rows.map(r => r.table_name).join(', '));
+      console.error('DIAGNOSTICS - NEON_DATABASE_URL exists:', !!process.env.NEON_DATABASE_URL);
+      console.error('DIAGNOSTICS - DATABASE_URL exists:', !!process.env.DATABASE_URL);
+    } catch (diagErr: any) {
+      console.error('DIAGNOSTICS FAILED:', diagErr.message || diagErr);
+    }
+
     return NextResponse.json({ error: 'Lỗi server nội bộ' }, { status: 500 });
   }
 }
