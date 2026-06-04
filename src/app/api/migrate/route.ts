@@ -120,11 +120,20 @@ export async function GET() {
       } catch { /* ignore */ }
     }
 
+    const maskStr = (str: string | undefined) => {
+      if (!str) return 'undefined';
+      if (str.length <= 12) return str;
+      return str.substring(0, 10) + '...' + str.substring(str.length - 10);
+    };
+
     diagnostics.env_vars = {
       has_neon_db_url: !!process.env.NEON_DATABASE_URL,
       has_db_url: !!process.env.DATABASE_URL,
       has_postgres_url: !!process.env.POSTGRES_URL,
-      node_env: process.env.NODE_ENV
+      node_env: process.env.NODE_ENV,
+      neon_db_url: maskStr(process.env.NEON_DATABASE_URL),
+      db_url: maskStr(process.env.DATABASE_URL),
+      postgres_url: maskStr(process.env.POSTGRES_URL)
     };
 
     return NextResponse.json({ 
