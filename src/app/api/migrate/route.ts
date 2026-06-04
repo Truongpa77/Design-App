@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import pool from '@/lib/db';
+import { createDirectPool } from '@/lib/db';
 import { initializeSchema } from '@/lib/dbInit';
 
 export const dynamic = 'force-dynamic';
@@ -8,29 +8,33 @@ export async function GET() {
   const logs: string[] = [];
   const log = (msg: string) => { logs.push(msg); console.log(msg); };
 
+  // Tạo pool kết nối TRỰC TIẾP (không qua PgBouncer) cho DDL operations
+  const directPool = createDirectPool();
+
   try {
-    log('🔄 Bắt đầu migration database...');
+    log('🔄 Bắt đầu migration database (direct connection, không qua pooler)...');
 
     // 1. Chẩn đoán trạng thái kết nối
-    const roCheck = await pool.query(`
+    const roCheck = await directPool.query(`
       SELECT 
         current_setting('transaction_read_only') as transaction_ro,
         current_setting('default_transaction_read_only') as default_ro,
         current_database() as current_db,
-        current_user as current_user
+        current_user as current_user,
+        inet_server_addr() as server_ip
     `);
-    log(`📊 DB: ${roCheck.rows[0].current_db}, User: ${roCheck.rows[0].current_user}`);
+    log(`📊 DB: ${roCheck.rows[0].current_db}, User: ${roCheck.rows[0].current_user}, IP: ${roCheck.rows[0].server_ip}`);
     log(`📊 transaction_read_only: ${roCheck.rows[0].transaction_ro}, default: ${roCheck.rows[0].default_ro}`);
 
     // 2. Chạy initializeSchema (tạo bảng + seed dữ liệu)
-    await initializeSchema(pool);
+    await initializeSchema(directPool);
     log('✅ initializeSchema hoàn thành');
 
     // 3. Chạy thêm các migration bổ sung (seed phụ kiện, sản phẩm, BOM)
-    await runAdditionalMigrations(pool, log);
+    await runAdditionalMigrations(directPool, log);
 
     // 4. Kiểm tra kết quả
-    const tablesRes = await pool.query(`
+    const tablesRes = await directPool.query(`
       SELECT table_name 
       FROM information_schema.tables 
       WHERE table_schema = 'public'
@@ -52,7 +56,7 @@ export async function GET() {
     // Thu thập diagnostics
     let diagnostics: Record<string, any> = {};
     try {
-      const roCheck = await pool.query(`
+      const roCheck = await directPool.query(`
         SELECT 
           current_setting('transaction_read_only') as transaction_ro,
           current_setting('default_transaction_read_only') as default_ro,
@@ -68,6 +72,7 @@ export async function GET() {
       try {
         const url = new URL(connStr);
         diagnostics.connection_host = url.host;
+        diagnostics.connection_host_direct = url.host.replace('-pooler.', '.');
         diagnostics.connection_db = url.pathname;
       } catch { /* ignore */ }
     }
@@ -85,10 +90,13 @@ export async function GET() {
       logs,
       diagnostics
     }, { status: 200 });
+  } finally {
+    // Đóng direct pool sau khi migration xong
+    await directPool.end().catch(() => {});
   }
 }
 
-async function runAdditionalMigrations(p: typeof pool, log: (msg: string) => void) {
+async function runAdditionalMigrations(p: import('pg').Pool, log: (msg: string) => void) {
   // 1. Thêm cột mapping vào product_bom
   await p.query(`
     ALTER TABLE product_bom 
