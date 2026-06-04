@@ -31,6 +31,31 @@ export async function GET() {
     return NextResponse.json({ success: true, message: 'Database migrated successfully!' });
   } catch (err: any) {
     console.error('❌ Lỗi khi cập nhật cơ sở dữ liệu:', err);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    
+    // Anonymize the connection string for safe remote diagnostics
+    const connStr = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL;
+    let anonymizedConn = 'undefined';
+    if (connStr) {
+      try {
+        const url = new URL(connStr);
+        anonymizedConn = `${url.protocol}//${url.username}:***@${url.host}${url.pathname}?${url.searchParams.toString()}`;
+      } catch (e) {
+        anonymizedConn = 'invalid-url-format';
+      }
+    }
+
+    return NextResponse.json({ 
+      success: false, 
+      error: err.message || String(err),
+      diagnostics: {
+        has_neon_db_url: !!process.env.NEON_DATABASE_URL,
+        has_db_url: !!process.env.DATABASE_URL,
+        has_postgres_url: !!process.env.POSTGRES_URL,
+        anonymized_connection_string: anonymizedConn,
+        db_host: process.env.DB_HOST || 'undefined',
+        node_env: process.env.NODE_ENV
+      }
+    }, { status: 200 });
   }
 }
+
