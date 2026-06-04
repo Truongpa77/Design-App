@@ -1,6 +1,23 @@
 import { Pool } from 'pg';
 
-const rawConnectionString = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL;
+function getValidConnectionString(): string | undefined {
+  const urls = [
+    process.env.NEON_DATABASE_URL,
+    process.env.DATABASE_URL,
+    process.env.POSTGRES_URL
+  ];
+  
+  for (const url of urls) {
+    if (url && (url.startsWith('postgres://') || url.startsWith('postgresql://'))) {
+      return url;
+    }
+  }
+  
+  // Fallback to the first defined env var if none are valid URL strings
+  return process.env.NEON_DATABASE_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL;
+}
+
+const rawConnectionString = getValidConnectionString();
 
 const host = process.env.DB_HOST || process.env.POSTGRES_HOST;
 
