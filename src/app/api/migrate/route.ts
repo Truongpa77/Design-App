@@ -26,12 +26,13 @@ export async function GET() {
           current_database() as current_db,
           current_user as current_user,
           inet_server_addr() as server_ip,
-          version() as pg_version
+          version() as pg_version,
+          pg_is_in_recovery() as is_recovery
       `);
       dbStatusInfo = roCheck.rows[0];
       log(`📊 DB: ${dbStatusInfo.current_db}, User: ${dbStatusInfo.current_user}, IP: ${dbStatusInfo.server_ip}`);
       log(`📊 PG: ${dbStatusInfo.pg_version}`);
-      log(`📊 BEFORE SET: transaction_read_only=${dbStatusInfo.transaction_ro}, default=${dbStatusInfo.default_ro}`);
+      log(`📊 BEFORE SET: transaction_read_only=${dbStatusInfo.transaction_ro}, default=${dbStatusInfo.default_ro}, in_recovery=${dbStatusInfo.is_recovery}`);
 
       // Thử force read-write
       try {
