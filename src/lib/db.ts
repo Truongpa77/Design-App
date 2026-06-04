@@ -1,7 +1,13 @@
 import { Pool } from 'pg';
 import { initializeSchema } from './dbInit';
 
-const connectionString = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL;
+let connectionString = process.env.NEON_DATABASE_URL || process.env.DATABASE_URL || process.env.POSTGRES_URL;
+
+// Tự động chuyển đổi từ Pooled (PgBouncer) sang Direct nếu chứa '-pooler' để chạy được migration (ALTER/CREATE TABLE)
+if (connectionString && connectionString.includes('-pooler.')) {
+  connectionString = connectionString.replace('-pooler.', '.');
+}
+
 const host = process.env.DB_HOST || process.env.POSTGRES_HOST;
 
 const isLocal = (!connectionString && (!host || host === 'localhost' || host === '127.0.0.1')) || 
